@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { JWTUtils } from '../utils/jwt';
+import jwt from 'jsonwebtoken';
 
 export interface AuthenticatedRequest extends Request {
   user?: {
@@ -24,17 +25,18 @@ export const authenticateToken = (
     return;
   }
 
-  try {
-    const payload = JWTUtils.verifyToken(token);
-    req.user = payload;
+  jwt.verify(token, process.env.JWT_SECRET!, (err: any, decoded: any) => {
+    if (err) {
+      res.status(403).json({
+        status: 'error',
+        message: 'Token inválido o expirado'
+      });
+      return;
+    }
+
+    req.user = decoded as { userId: string; email: string };
     next();
-  } catch (error) {
-    console.error('Error verificando token:', error);
-    res.status(403).json({
-      status: 'error',
-      message: 'Token inválido o expirado'
-    });
-  }
+  });
 };
 
 export const requireEmailVerified = (

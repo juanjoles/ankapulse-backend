@@ -46,3 +46,25 @@ export interface AuthResponse {
   token: string;
   user: UserPublic;
 }
+
+import { Check } from '@prisma/client';
+
+// Usamos el tipo Check de @prisma/client en lugar de definir uno propio
+
+export interface CreateCheckRequest {
+  url: string;
+  name?: string;
+  interval: string;
+  regions: string[];
+  timeout?: number;
+  expectedStatusCode?: number;
+}
+
+export interface CheckResponse {
+  status: 'success' | 'error';
+  message: string;
+  data?: {
+    check: Check;
+  };
+  errors?: string[];
+}

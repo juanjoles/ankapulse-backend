@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import userRoutes from './userRoutes';
 import authRoutes from './authRoutes';
+import checkRoutes from './checkRoutes';
 
 const router = Router();
 
@@ -24,5 +25,8 @@ router.use('/users', userRoutes);
 
 // Rutas de autenticación
 router.use('/auth', authRoutes);
+
+// Rutas de checks
+router.use('/checks', checkRoutes);
 
 export default router;
