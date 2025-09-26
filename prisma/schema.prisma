@@ -12,9 +12,12 @@ datasource db {
 
 model User {
   id            String   @id @default(uuid())
+  auth0Id       String?  @unique  // NUEVO - para usuarios de Auth0
+  provider      String?             // NUEVO - "google", "github", "email"
   nombre        String
   email         String   @unique
-  password      String
+  password      String?             // MODIFICADO - opcional para social login
+  avatar        String?             // NUEVO - URL de avatar del proveedor
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   isActive      Boolean  @default(true)

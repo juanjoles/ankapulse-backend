@@ -43,7 +43,10 @@ hawkpulse-backend/
    ```bash
    cp .env.example .env
    ```
-   Edita el archivo `.env` con tus configuraciones.
+   Edita el archivo `.env` con tus configuraciones:
+   - Variables de base de datos PostgreSQL
+   - JWT secret para tokens locales
+   - **Auth0**: Domain, Client ID, Client Secret (para Google/GitHub)
 
 3. **Configurar base de datos:**
    ```bash
@@ -91,12 +94,20 @@ hawkpulse-backend/
 ### API Base
 - **GET** `/api` - Información general de la API
 
-### Usuarios
-- **POST** `/api/users/register` - Registro de nuevos usuarios
-- **GET** `/api/users/profile` - Obtener perfil de usuario (próximamente)
+### Usuarios (Sistema tradicional)
+- **POST** `/api/users/register` - Registro con email/password
+- **GET** `/api/users/profile` - Obtener perfil (protegida con JWT)
 
-### Autenticación
-- **POST** `/api/auth/login` - Placeholder para login
+### Autenticación Tradicional
+- **POST** `/api/auth/login` - Login con email/password (próximamente)
+- **POST** `/api/auth/logout` - Logout tradicional (próximamente)
+
+### Autenticación Social (Auth0 + OAuth)
+- **GET** `/auth/login/google` - Login con Google
+- **GET** `/auth/login/github` - Login con GitHub
+- **GET** `/auth/callback` - Callback de Auth0 (automático)
+- **POST** `/auth/logout/auth0` - Logout de Auth0
+- **GET** `/auth/info` - Información de configuración Auth0
 
 ## 🌐 Configuración del Servidor
 
@@ -106,6 +117,45 @@ Una vez iniciado, estará disponible en:
 - **URL local:** `http://localhost:3000`
 - **Health check:** `http://localhost:3000/health`
 - **API base:** `http://localhost:3000/api`
+
+## 🔐 Configuración Auth0 (OAuth Social)
+
+### Prerrequisitos Auth0:
+1. **Cuenta en Auth0**: Regístrate en https://auth0.com
+2. **Crear aplicación**: Regular Web Application
+3. **Configurar proveedores sociales**:
+   - Google: Client ID/Secret desde Google Cloud Console
+   - GitHub: Client ID/Secret desde GitHub OAuth Apps
+
+### Variables Auth0 requeridas (.env):
+```bash
+# Auth0 Configuration
+AUTH0_DOMAIN=tu-dominio.auth0.com
+AUTH0_CLIENT_ID=tu_client_id  
+AUTH0_CLIENT_SECRET=tu_client_secret
+AUTH0_CALLBACK_URL=http://localhost:3000/auth/callback
+AUTH0_AUDIENCE=
+```
+
+### Configuración Auth0 Dashboard:
+- **Allowed Callback URLs**: `http://localhost:3000/auth/callback`
+- **Allowed Web Origins**: `http://localhost:3000`
+- **Allowed Logout URLs**: `http://localhost:3000`
+
+## 🔄 Flujo de Autenticación Híbrido
+
+### Sistema Tradicional (Mantiene funcionamiento actual):
+1. `POST /api/users/register` → Usuario + Token JWT local
+2. `GET /api/users/profile` → Funciona con token local
+
+### Sistema Auth0 Social (Nuevo):
+1. `GET /auth/login/google` → Redirige a Google via Auth0
+2. Usuario autoriza en Google
+3. `GET /auth/callback` → Procesa respuesta automáticamente
+4. Retorna: Usuario + Token JWT **compatible** con sistema actual
+5. `GET /api/users/profile` → **Funciona igual** con ambos tipos de token
+
+**✅ Compatibilidad total**: El mismo endpoint `/api/users/profile` funciona para usuarios creados con email/password Y usuarios de Google/GitHub.
 
 ## 📋 Próximos Pasos
 
