@@ -6,7 +6,7 @@ export interface AuthenticatedRequest extends Request {
   user?: {
     userId: string;
     email: string;
-    provider?: string; // NUEVO - para identificar origen del token
+    provider?: string;
   };
 }
 
@@ -16,7 +16,7 @@ export const authenticateToken = async (
   next: NextFunction
 ): Promise<void> => {
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+  const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
     res.status(401).json({
@@ -31,11 +31,11 @@ export const authenticateToken = async (
     const isAuth0Token = Auth0Utils.isAuth0Token(token);
     
     if (isAuth0Token) {
-      // NUEVO - Validar token de Auth0
+      // Validar token de Auth0
       try {
         const auth0Profile = await Auth0Utils.validateAuth0JWT(token);
         req.user = {
-          userId: auth0Profile.sub, // Usar Auth0 sub como userId temporal
+          userId: auth0Profile.sub,
           email: auth0Profile.email,
           provider: 'auth0'
         };
@@ -48,7 +48,7 @@ export const authenticateToken = async (
         return;
       }
     } else {
-      // MANTENER - Validar token local (lógica original)
+      // Validar token local
       const payload = JWTUtils.verifyToken(token);
       req.user = {
         userId: payload.userId,
@@ -59,7 +59,6 @@ export const authenticateToken = async (
     
     next();
   } catch (error) {
-    console.error('Error verificando token:', error);
     res.status(403).json({
       status: 'error',
       message: 'Token inválido o expirado'
@@ -79,15 +78,6 @@ export const requireEmailVerified = (
     });
     return;
   }
-
-  // Por ahora permitimos acceso, pero puedes implementar verificación de email aquí
-  // if (!req.user.emailVerified) {
-  //   res.status(403).json({
-  //     status: 'error',
-  //     message: 'Verificación de email requerida'
-  //   });
-  //   return;
-  // }
 
   next();
 };

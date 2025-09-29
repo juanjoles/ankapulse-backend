@@ -2,6 +2,7 @@ import { Router } from 'express';
 import userRoutes from './userRoutes';
 import authRoutes from './authRoutes';
 import auth0Routes from './auth0Routes';
+import checkRoutes from './checkRoutes';
 
 const router = Router();
 
@@ -12,27 +13,32 @@ router.get('/', (req, res) => {
     version: '1.0.0',
     endpoints: {
       health: '/health',
-      // Autenticación tradicional (MANTENER)
+      // Autenticación tradicional
       register: '/api/users/register',
       profile: '/api/users/profile',
       login: '/api/auth/login',
       logout: '/api/auth/logout',
-      // Nuevas rutas Auth0 (AGREGAR)
+      // Auth0 social login
       auth0Info: '/auth/info',
       googleLogin: '/auth/login/google',
       githubLogin: '/auth/login/github',
       auth0Callback: '/auth/callback',
-      auth0Logout: '/auth/logout/auth0'
+      auth0Logout: '/auth/logout/auth0',
+      // Checks endpoints
+      checks: '/api/checks'
     },
-    note: 'Sistema híbrido: autenticación tradicional + Auth0 social login'
+    note: 'Sistema híbrido: autenticación tradicional + Auth0 social login + API monitoring'
   });
 });
 
-// Rutas de usuarios (MANTENER)
+// Rutas de usuarios
 router.use('/users', userRoutes);
 
-// Rutas de autenticación tradicional (MANTENER)
+// Rutas de autenticación tradicional
 router.use('/auth', authRoutes);
+
+// Rutas de checks
+router.use('/checks', checkRoutes);
 
 export default router;
 
