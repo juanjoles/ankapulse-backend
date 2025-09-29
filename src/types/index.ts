@@ -12,9 +12,12 @@ export interface ApiResponse<T = any> {
 
 export interface User {
   id: string;
+  auth0Id?: string;        // NUEVO
+  provider?: string;       // NUEVO
   nombre: string;
   email: string;
-  password: string;
+  password?: string;       // MODIFICADO - opcional para social login
+  avatar?: string;         // NUEVO
   createdAt: Date;
   updatedAt: Date;
   isActive: boolean;
@@ -25,6 +28,8 @@ export interface UserPublic {
   id: string;
   nombre: string;
   email: string;
+  avatar?: string;         // NUEVO
+  provider?: string;       // NUEVO
   createdAt: Date;
   updatedAt: Date;
   isActive: boolean;
@@ -47,24 +52,18 @@ export interface AuthResponse {
   user: UserPublic;
 }
 
-import { Check } from '@prisma/client';
-
-// Usamos el tipo Check de @prisma/client en lugar de definir uno propio
-
-export interface CreateCheckRequest {
-  url: string;
-  name?: string;
-  interval: string;
-  regions: string[];
-  timeout?: number;
-  expectedStatusCode?: number;
+// Tipos específicos de Auth0 (NUEVOS)
+export interface Auth0Profile {
+  sub: string;
+  email: string;
+  name: string;
+  picture?: string;
+  email_verified: boolean;
 }
 
-export interface CheckResponse {
-  status: 'success' | 'error';
-  message: string;
-  data?: {
-    check: Check;
-  };
-  errors?: string[];
+export interface Auth0LoginResponse {
+  user: UserPublic;
+  token: string;
+  isNewUser: boolean;
+  provider: string;
 }

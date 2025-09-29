@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import routes from './routes';
+import auth0Routes from './routes/auth0Routes';
 import { errorHandler } from './middleware/errorHandler';
 
 // Cargar variables de entorno
@@ -19,15 +20,19 @@ app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Rutas principales
+// Rutas principales de API (MANTENER)
 app.use('/api', routes);
 
-// Ruta de health check
+// Rutas Auth0 - van en el root para evitar conflictos (NUEVO)
+app.use('/auth', auth0Routes);
+
+// Ruta de health check (MANTENER)
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'OK',
     message: 'HawkPulse Backend is running',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    authentication: 'Híbrido: Local JWT + Auth0 Social'
   });
 });
 
