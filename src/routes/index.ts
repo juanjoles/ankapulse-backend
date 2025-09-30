@@ -2,7 +2,7 @@ import { Router } from 'express';
 import userRoutes from './userRoutes';
 import authRoutes from './authRoutes';
 import auth0Routes from './auth0Routes';
-import checkRoutes from './checkRoutes';
+import checkRoutes from './checks.routes';
 
 const router = Router();
 

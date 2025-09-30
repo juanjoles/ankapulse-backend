@@ -2,16 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { JWTUtils } from '../utils/jwt';
 import { Auth0Utils } from '../utils/auth0';
 
-export interface AuthenticatedRequest extends Request {
-  user?: {
-    userId: string;
-    email: string;
-    provider?: string;
-  };
-}
-
 export const authenticateToken = async (
-  req: AuthenticatedRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
@@ -35,7 +27,8 @@ export const authenticateToken = async (
       try {
         const auth0Profile = await Auth0Utils.validateAuth0JWT(token);
         req.user = {
-          userId: auth0Profile.sub,
+          sub: auth0Profile.sub,
+          userId: auth0Profile.sub,  // Duplicar para compatibilidad
           email: auth0Profile.email,
           provider: 'auth0'
         };
@@ -51,7 +44,8 @@ export const authenticateToken = async (
       // Validar token local
       const payload = JWTUtils.verifyToken(token);
       req.user = {
-        userId: payload.userId,
+        sub: payload.userId,
+        userId: payload.userId,  // Mantener userId
         email: payload.email,
         provider: 'local'
       };
@@ -67,11 +61,11 @@ export const authenticateToken = async (
 };
 
 export const requireEmailVerified = (
-  req: AuthenticatedRequest,
+  req: Request,  // <-- Cambiar de AuthenticatedRequest a Request
   res: Response,
   next: NextFunction
 ): void => {
-  if (!req.user?.userId) {
+  if (!req.user?.sub) {  // <-- Cambiar userId por sub (o usar userId si lo prefieres)
     res.status(401).json({
       status: 'error',
       message: 'Usuario no autenticado'
