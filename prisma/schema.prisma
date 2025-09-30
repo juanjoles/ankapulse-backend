@@ -12,12 +12,12 @@ datasource db {
 
 model User {
   id            String   @id @default(uuid())
-  auth0Id       String?  @unique  // NUEVO - para usuarios de Auth0
-  provider      String?             // NUEVO - "google", "github", "email"
+  auth0Id       String?  @unique // NUEVO - para usuarios de Auth0
+  provider      String? // NUEVO - "google", "github", "email"
   nombre        String
   email         String   @unique
-  password      String?             // MODIFICADO - opcional para social login
-  avatar        String?             // NUEVO - URL de avatar del proveedor
+  password      String? // MODIFICADO - opcional para social login
+  avatar        String? // NUEVO - URL de avatar del proveedor
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   isActive      Boolean  @default(true)
@@ -29,22 +29,58 @@ model User {
 }
 
 model Check {
-  id                   String   @id @default(uuid())
-  userId               String
-  url                  String
-  name                 String?
-  interval             String   // '5min', '1hour', '1day'
-  regions              String[] // ['sao-paulo', 'new-york', 'frankfurt']
-  status               String   @default("active") // 'active', 'paused', 'failed'
-  timeout              Int      @default(30) // segundos
-  expectedStatusCode   Int      @default(200)
-  lastCheckAt          DateTime?
-  lastStatus           String?  // 'up', 'down', 'timeout'
-  failureCount         Int      @default(0)
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-  
-  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id                 String    @id @default(uuid())
+  userId             String
+  url                String
+  name               String?
+  interval           String    @default("5min") // "5min", "1hour", "1day"
+  regions            String[]  @default([])
+  timeout            Int       @default(30) // seconds
+  expectedStatusCode Int       @default(200)
+  status             String    @default("active") // "active", "paused"
+  lastCheckAt        DateTime?
+  lastStatus         String? // "up", "down"
+  failureCount       Int       @default(0)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  checkResults CheckResult[]
+  alerts       Alert[]
+
+  @@index([userId])
   @@map("checks")
+}
+
+model CheckResult {
+  id           String   @id @default(uuid())
+  checkId      String
+  region       String // 'us-east', 'sao-paulo', 'frankfurt'
+  statusCode   Int
+  latencyMs    Int
+  success      Boolean
+  errorMessage String?
+  timestamp    DateTime @default(now())
+
+  check  Check   @relation(fields: [checkId], references: [id], onDelete: Cascade)
+  alerts Alert[]
+
+  @@index([checkId, timestamp])
+  @@map("check_results")
+}
+
+model Alert {
+  id            String   @id @default(uuid())
+  checkId       String
+  checkResultId String
+  alertType     String // 'email', 'telegram'
+  sentAt        DateTime @default(now())
+  success       Boolean
+  errorMessage  String?
+
+  check       Check       @relation(fields: [checkId], references: [id], onDelete: Cascade)
+  checkResult CheckResult @relation(fields: [checkResultId], references: [id], onDelete: Cascade)
+
+  @@index([checkId, sentAt])
+  @@map("alerts")
 }
