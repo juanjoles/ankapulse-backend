@@ -1,7 +1,7 @@
 // src/services/emailService.ts
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+//const resend = new Resend(process.env.RESEND_API_KEY);
 
 export interface AlertEmailData {
   userEmail: string;
@@ -17,10 +17,12 @@ export interface AlertEmailData {
 
 export class EmailService {
   private fromEmail: string;
+  private resend: Resend;
 
   constructor() {
     // En desarrollo puedes usar onboarding@resend.dev
     // En producción usa tu dominio verificado
+    this.resend = new Resend(process.env.RESEND_API_KEY!);
     this.fromEmail = process.env.EMAIL_FROM || 'AnkaPulse <onboarding@resend.dev>';
   }
 
@@ -31,7 +33,7 @@ export class EmailService {
     try {
       const htmlContent = this.generateAlertEmailHTML(data);
 
-      const response = await resend.emails.send({
+      const response = await this.resend.emails.send({
         from: this.fromEmail,
         to: data.userEmail,
         subject: `🚨 Alert: ${data.checkName} is DOWN`,
@@ -197,7 +199,7 @@ export class EmailService {
    */
   async sendWelcomeEmail(userEmail: string, userName?: string): Promise<{ success: boolean }> {
     try {
-      await resend.emails.send({
+      await this.resend.emails.send({
         from: this.fromEmail,
         to: userEmail,
         subject: '👋 Welcome to AnkaPulse',
