@@ -3,13 +3,15 @@ import userRoutes from './userRoutes';
 import authRoutes from './authRoutes';
 import auth0Routes from './auth0Routes';
 import checkRoutes from './checks.routes';
+import subscriptionRoutes from './subscriptionRoutes';
+import webhookRoutes from './webhookRoutes';
 
 const router = Router();
 
 // Ruta principal de la API
 router.get('/', (req, res) => {
   res.json({
-    message: 'Welcome to HawkPulse API',
+    message: 'Welcome to AnkaPulse API',
     version: '1.0.0',
     endpoints: {
       health: '/health',
@@ -39,6 +41,10 @@ router.use('/auth', authRoutes);
 
 // Rutas de checks
 router.use('/checks', checkRoutes);
+
+router.use('/subscriptions', subscriptionRoutes);
+
+router.use('/webhooks', webhookRoutes);
 
 export default router;
 

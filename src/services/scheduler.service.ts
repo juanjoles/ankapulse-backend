@@ -92,16 +92,22 @@ export class SchedulerService {
   }
 
   // Convertir intervalos a patrones cron
-  private getRepeatPattern(interval: string) {
-    switch (interval) {
-      case '5min':
-        return { pattern: '*/5 * * * *' }; // Cada 5 minutos
-      case '1hour':
-        return { pattern: '0 * * * *' }; // Cada hora en punto
-      case '1day':
-        return { pattern: '0 0 * * *' }; // Cada día a medianoche
-      default:
-        return { pattern: '*/5 * * * *' }; // Default: cada 5 minutos
-    }
+private getRepeatPattern(interval: string) {
+  switch (interval) {
+    case '1min':
+      return { pattern: '* * * * *' }; // Cada minuto
+    case '5min':
+      return { pattern: '*/5 * * * *' }; // Cada 5 minutos
+    case '15min':
+      return { pattern: '*/15 * * * *' }; // Cada 15 minutos
+    case '30min':
+      return { pattern: '*/30 * * * *' }; // Cada 30 minutos
+    case '1h':
+      return { pattern: '0 * * * *' }; // Cada hora en punto
+    case '1d':
+      return { pattern: '0 0 * * *' }; // Cada día a medianoche
+    default:
+      return { pattern: '*/30 * * * *' }; // Default: cada 30 minutos
   }
+}
 }

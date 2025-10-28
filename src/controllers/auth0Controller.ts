@@ -37,56 +37,74 @@ export class Auth0Controller {
   }
 
   // Manejar callback de Auth0
-  static async handleCallback(req: Request, res: Response): Promise<void> {
-    try {
-      const { code, error, error_description } = req.query;
+static async handleCallback(req: Request, res: Response): Promise<void> {
+  try {
+    const { code, error, error_description } = req.query;
 
-      // Manejar errores de Auth0
-      if (error) {
-        console.error('Error de Auth0:', error, error_description);
-        res.status(400).json({
-          status: 'error',
-          message: `Error de autenticación: ${error_description || error}`
-        });
-        return;
-      }
-
-      if (!code) {
-        res.status(400).json({
-          status: 'error',
-          message: 'Código de autorización no recibido'
-        });
-        return;
-      }
-
-      // Intercambiar código por tokens
-      const tokens = await Auth0Utils.exchangeCodeForTokens(code as string);
+    // URL del frontend
+    const frontendURL = process.env.FRONTEND_URL || 'http://localhost:3001';
+    console.log('Frontend URL:', frontendURL);
+    // Manejar errores de Auth0
+    if (error) {
+      console.error('Error de Auth0:', error, error_description);
       
-      // Obtener información del usuario
-      const userProfile = await Auth0Utils.getUserProfile(tokens.access_token);
+      const errorURL = new URL(`${frontendURL}/callback`);
+      errorURL.searchParams.set('error', 'auth_failed');
+      errorURL.searchParams.set('message', error_description as string || error as string);
       
-      // Crear o encontrar usuario en la base de datos
-      const result = await UserService.findOrCreateFromAuth0(userProfile);
-      
-      // Responder con información del usuario y token JWT local
-      res.status(200).json({
-        status: 'success',
-        message: result.isNewUser ? 'Usuario registrado exitosamente' : 'Login exitoso',
-        data: {
-          user: result.user,
-          token: result.token,
-          isNewUser: result.isNewUser,
-          provider: Auth0Utils.getProviderFromAuth0Sub(userProfile.sub)
-        }
-      });
-    } catch (error) {
-      console.error('Error en callback de Auth0:', error);
-      res.status(500).json({
-        status: 'error',
-        message: 'Error procesando autenticación'
-      });
+      res.redirect(errorURL.toString());
+      return;
     }
+
+    if (!code) {
+      const errorURL = new URL(`${frontendURL}/callback`);
+      errorURL.searchParams.set('error', 'no_code');
+      errorURL.searchParams.set('message', 'Código de autorización no recibido');
+      
+      res.redirect(errorURL.toString());
+      return;
+    }
+
+    // Intercambiar código por tokens
+    const tokens = await Auth0Utils.exchangeCodeForTokens(code as string);
+    
+    // Obtener información del usuario
+    const userProfile = await Auth0Utils.getUserProfile(tokens.access_token);
+    
+    // Crear o encontrar usuario en la base de datos
+    const result = await UserService.findOrCreateFromAuth0(userProfile);
+    
+    // Establecer cookie segura con el token
+    res.cookie('authToken', result.token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
+      path: '/'
+    });
+
+    // Crear URL de callback exitoso con parámetros
+    const successURL = new URL(`${frontendURL}/callback`);
+    successURL.searchParams.set('success', 'true');
+    successURL.searchParams.set('token', result.token);
+    successURL.searchParams.set('isNewUser', result.isNewUser.toString());
+    successURL.searchParams.set('provider', Auth0Utils.getProviderFromAuth0Sub(userProfile.sub));
+    successURL.searchParams.set('userId', result.user.id);
+    console.log(successURL.toString());
+    // Redirigir al frontend
+    res.redirect(successURL.toString());
+
+  } catch (error) {
+    console.error('Error en callback de Auth0:', error);
+    
+    const frontendURL = process.env.FRONTEND_URL || 'http://localhost:3001';
+    const errorURL = new URL(`${frontendURL}/callback`);
+    errorURL.searchParams.set('error', 'server_error');
+    errorURL.searchParams.set('message', 'Error procesando autenticación');
+    
+    res.redirect(errorURL.toString());
   }
+}
 
   // Logout específico de Auth0
   static async logoutAuth0(req: Request, res: Response): Promise<void> {

@@ -1,23 +1,48 @@
+// src/routes/authRoutes.ts
 import { Router } from 'express';
-import { Request, Response } from 'express';
+import { AuthController } from '../controllers/authController';
+import { Auth0Controller } from '../controllers/auth0Controller';
 
 const router = Router();
 
-// POST /api/auth/login - Login de usuario (placeholder)
-router.post('/login', (req: Request, res: Response) => {
-  res.status(200).json({
-    status: 'success',
-    message: 'Endpoint de login - Próximamente disponible',
-    note: 'Por ahora usa /api/users/register que ya incluye autenticación automática'
-  });
-});
+/**
+ * ============================================
+ * AUTENTICACIÓN LOCAL (Email/Password)
+ * ============================================
+ */
 
-// POST /api/auth/logout - Logout de usuario (placeholder)
-router.post('/logout', (req: Request, res: Response) => {
-  res.status(200).json({
-    status: 'success',
-    message: 'Logout exitoso - En el frontend elimina el token del localStorage'
-  });
-});
+// POST /api/auth/register
+// Body: { email, nombre, password }
+// Crear nueva cuenta con email y contraseña
+router.post('/register', AuthController.register);
+
+// POST /api/auth/login
+// Body: { email, password }
+// Iniciar sesión con credenciales locales
+router.post('/login', AuthController.login);
+
+/**
+ * ============================================
+ * AUTENTICACIÓN OAUTH (Google/GitHub vía Auth0)
+ * ============================================
+ */
+
+
+// Si tienes más endpoints de Auth0, agrégalos aquí:
+// router.get('/auth0/authorize', Auth0Controller.authorize);
+// router.post('/auth0/token', Auth0Controller.token);
+
+/**
+ * ============================================
+ * FUTURO: Otras rutas de autenticación
+ * ============================================
+ * 
+ * POST /api/auth/logout (blacklist de tokens)
+ * POST /api/auth/refresh-token (renovar token expirado)
+ * POST /api/auth/forgot-password (solicitar reset)
+ * POST /api/auth/reset-password (resetear con token)
+ * POST /api/auth/verify-email (verificar email)
+ * POST /api/auth/resend-verification (reenviar email)
+ */
 
 export default router;

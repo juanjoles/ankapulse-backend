@@ -37,7 +37,12 @@ export async function createCheck(req: Request, res: Response): Promise<void> {
     await schedulerService.scheduleCheck(check, true);
 
    
-    res.status(201).json(check);
+    res.status(201).json({
+      success: true,
+      data:{
+        check:check
+      }
+    });
   } catch (error) {
     console.error('Error creating check:', error);
     res.status(500).json({ error: 'Failed to create check' });
