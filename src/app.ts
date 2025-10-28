@@ -135,13 +135,13 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Rutas principales de API (MANTENER)
-app.use('/api', apiLimiter, routes);
+app.use('/api',  routes);
 
 // Rutas Auth0 - van en el root para evitar conflictos (NUEVO)
-app.use('/auth', authLimiter, auth0Routes);
+app.use('/auth',  auth0Routes);
 
 // Integrando las rutas de checks en la aplicación principal
-app.use('/api', apiLimiter, checksRoutes);
+app.use('/api', checksRoutes);
 
 // Ruta de health check (MANTENER)
 app.get('/health', (req, res) => {
