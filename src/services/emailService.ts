@@ -1,8 +1,6 @@
 // src/services/emailService.ts
 import { Resend } from 'resend';
 
-//const resend = new Resend(process.env.RESEND_API_KEY);
-
 export interface AlertEmailData {
   userEmail: string;
   userName?: string;
@@ -17,19 +15,31 @@ export interface AlertEmailData {
 
 export class EmailService {
   private fromEmail: string;
-  private resend: Resend;
+  private resend: Resend | null = null;
 
   constructor() {
-    // En desarrollo puedes usar onboarding@resend.dev
-    // En producción usa tu dominio verificado
-    this.resend = new Resend(process.env.RESEND_API_KEY!);
     this.fromEmail = process.env.EMAIL_FROM || 'AnkaPulse <onboarding@resend.dev>';
+    
+    // Solo inicializar si existe la API key
+    if (process.env.RESEND_API_KEY) {
+      try {
+        this.resend = new Resend(process.env.RESEND_API_KEY);
+        console.log('✅ Resend initialized successfully');
+      } catch (error) {
+        console.error('❌ Failed to initialize Resend:', error);
+        this.resend = null;
+      }
+    } else {
+      console.warn('⚠️ RESEND_API_KEY not found, email service disabled');
+    }
   }
 
-  /**
-   * Envía email de alerta cuando un check falla
-   */
   async sendAlertEmail(data: AlertEmailData): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    if (!this.resend) {
+      console.warn('Email service not available - RESEND_API_KEY missing');
+      return { success: false, error: 'Email service not configured' };
+    }
+
     try {
       const htmlContent = this.generateAlertEmailHTML(data);
 
@@ -197,24 +207,24 @@ export class EmailService {
   /**
    * Email de bienvenida (opcional, para cuando implementes login)
    */
-  async sendWelcomeEmail(userEmail: string, userName?: string): Promise<{ success: boolean }> {
-    try {
-      await this.resend.emails.send({
-        from: this.fromEmail,
-        to: userEmail,
-        subject: '👋 Welcome to AnkaPulse',
-        html: `
-          <h1>Welcome to AnkaPulse!</h1>
-          <p>Hi ${userName || 'there'},</p>
-          <p>Thanks for signing up. Start monitoring your APIs and applications from multiple regions.</p>
-          <p><a href="${process.env.FRONTEND_URL || 'https://AnkaPulse.com'}/dashboard">Go to Dashboard</a></p>
-        `,
-      });
+  // async sendWelcomeEmail(userEmail: string, userName?: string): Promise<{ success: boolean }> {
+  //   try {
+  //     await this.resend.emails.send({
+  //       from: this.fromEmail,
+  //       to: userEmail,
+  //       subject: '👋 Welcome to AnkaPulse',
+  //       html: `
+  //         <h1>Welcome to AnkaPulse!</h1>
+  //         <p>Hi ${userName || 'there'},</p>
+  //         <p>Thanks for signing up. Start monitoring your APIs and applications from multiple regions.</p>
+  //         <p><a href="${process.env.FRONTEND_URL || 'https://AnkaPulse.com'}/dashboard">Go to Dashboard</a></p>
+  //       `,
+  //     });
 
-      return { success: true };
-    } catch (error) {
-      console.error('Failed to send welcome email:', error);
-      return { success: false };
-    }
-  }
+  //     return { success: true };
+  //   } catch (error) {
+  //     console.error('Failed to send welcome email:', error);
+  //     return { success: false };
+  //   }
+  // }
 }
