@@ -66,7 +66,7 @@ export class WorkerService {
         signal: controller.signal,
         method: 'GET',
         headers: {
-          'User-Agent': 'HawkPulse-Monitor/1.0',
+          'User-Agent': 'AnkaPulse-Monitor/1.0',
         },
       });
 

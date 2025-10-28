@@ -1,4 +1,4 @@
-# HawkPulse Backend
+# AnkaPulse Backend
 
 API REST backend desarrollada con Node.js, TypeScript y Express.
 
@@ -15,7 +15,7 @@ API REST backend desarrollada con Node.js, TypeScript y Express.
 ## 📁 Estructura del Proyecto
 
 ```
-hawkpulse-backend/
+AnkaPulse-backend/
 ├── src/
 │   ├── middleware/
 │   │   └── errorHandler.ts
