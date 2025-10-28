@@ -5,8 +5,7 @@
   "main": "dist/app.js",
   "scripts": {
     "build": "tsc",
-    "start": "node -r dotenv/config dist/app.js",
-    "start:prod": "node dist/app.js",
+    "start": "node dist/app.js",
     "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
     "clean": "rimraf dist",
     "prebuild": "npm run clean",

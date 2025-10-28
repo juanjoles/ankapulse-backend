@@ -13,8 +13,16 @@ import { errorHandler } from './middleware/errorHandler';
 import { WorkerService } from './services/worker.service';
 import { SchedulerService } from './services/scheduler.service';
 
-// Cargar variables de entorno
-dotenv.config();
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config();
+}
+
+// Agregar logs de debug
+console.log('🔍 Verificando variables de entorno:');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL);
+console.log('REDIS_URL exists:', !!process.env.REDIS_URL);
+console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
