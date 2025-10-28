@@ -4,10 +4,8 @@
   "description": "AnkaPulse Backend API",
   "main": "dist/app.js",
   "scripts": {
-    "start": "node dist/app.js",
-    "start:prod": "NODE_ENV=production node dist/app.js",
     "build": "tsc",
-    "build:prod": "prisma generate && tsc",
+    "start": "node dist/app.js",
     "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
     "clean": "rimraf dist",
     "prebuild": "npm run clean",

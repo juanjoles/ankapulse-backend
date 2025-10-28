@@ -17,16 +17,37 @@ if (process.env.NODE_ENV !== 'production') {
   dotenv.config();
 }
 
-// Agregar logs de debug
-console.log('🔍 Verificando variables de entorno:');
+// LOGS DE DEBUG EXPANDIDOS
+console.log('🔍 ===== ENVIRONMENT VARIABLES DEBUG =====');
 console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL);
-console.log('REDIS_URL exists:', !!process.env.REDIS_URL);
-console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
+console.log('RAILWAY_ENVIRONMENT:', process.env.RAILWAY_ENVIRONMENT);
+console.log('PORT:', process.env.PORT);
+
+// Verificar variables críticas
+console.log('🔍 Variables críticas:');
+console.log('DATABASE_URL:', process.env.DATABASE_URL ? 'EXISTE ✅' : 'NO EXISTE ❌');
+console.log('REDIS_URL:', process.env.REDIS_URL ? 'EXISTE ✅' : 'NO EXISTE ❌');
+console.log('FRONTEND_URL:', process.env.FRONTEND_URL || 'NO DEFINIDA ❌');
+console.log('BACKEND_URL:', process.env.BACKEND_URL || 'NO DEFINIDA ❌');
+
+// Debug adicional - listar TODAS las variables disponibles
+console.log('🔍 Total de variables de entorno disponibles:', Object.keys(process.env).length);
+console.log('🔍 Variables que contienen "DATABASE":', Object.keys(process.env).filter(key => key.includes('DATABASE')));
+console.log('🔍 Variables que contienen "REDIS":', Object.keys(process.env).filter(key => key.includes('REDIS')));
+console.log('🔍 Variables que contienen "URL":', Object.keys(process.env).filter(key => key.includes('URL')));
+
+// Intentar acceso directo
+console.log('🔍 Acceso directo a DATABASE_URL:', process.env['DATABASE_URL']);
+console.log('🔍 Acceso directo a REDIS_URL:', process.env['REDIS_URL']);
+
+// Verificar si hay variables con nombres similares
+const allVars = Object.keys(process.env);
+console.log('🔍 Primeras 10 variables disponibles:', allVars.slice(0, 10));
+
+console.log('🔍 ======================================');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
 
 app.use(compression());
 
@@ -84,12 +105,21 @@ const apiLimiter = rateLimit({
 const speedLimiter = slowDown({
   windowMs: 15 * 60 * 1000, // 15 minutos
   delayAfter: 50, // permitir 50 requests sin delay
-  delayMs: 500, // agregar 500ms de delay por cada request adicional
+  delayMs: (hits, req) => {
+    const delayAfter = req.slowDown.limit;
+    return (hits - delayAfter) * 500;
+  }, // Configuración actualizada para evitar el warning
   maxDelayMs: 5000, // máximo delay de 5 segundos
 });
 
 app.use(cors({
-  origin: ['http://localhost:3001', 'http://localhost:3000', 'http://127.0.0.1:3001', 'http://127.0.0.1:3000'],
+  origin: [
+    'http://localhost:3001', 
+    'http://localhost:3000', 
+    'http://127.0.0.1:3001', 
+    'http://127.0.0.1:3000',
+    process.env.FRONTEND_URL
+  ].filter((v): v is string => Boolean(v)), // Filtrar valores undefined con type-guard
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
@@ -119,7 +149,14 @@ app.get('/health', (req, res) => {
     status: 'OK',
     message: 'AnkaPulse Backend is running',
     timestamp: new Date().toISOString(),
-    authentication: 'Híbrido: Local JWT + Auth0 Social'
+    authentication: 'Híbrido: Local JWT + Auth0 Social',
+    environment: {
+      nodeEnv: process.env.NODE_ENV,
+      port: process.env.PORT,
+      hasDatabase: !!process.env.DATABASE_URL,
+      hasRedis: !!process.env.REDIS_URL,
+      hasFrontendUrl: !!process.env.FRONTEND_URL
+    }
   });
 });
 
@@ -141,33 +178,56 @@ const schedulerService = new SchedulerService();
 async function initializeServices() {
   console.log('🚀 Initializing AnkaPulse services...');
   
-  // Iniciar worker
-  await workerService.start();
+  // Verificar variables críticas antes de inicializar servicios
+  if (!process.env.DATABASE_URL) {
+    console.error('❌ DATABASE_URL no encontrada. Servicios no se pueden inicializar.');
+    return;
+  }
   
-  // Sincronizar checks existentes
-  await schedulerService.syncChecks();
+  if (!process.env.REDIS_URL) {
+    console.error('❌ REDIS_URL no encontrada. Worker no se puede inicializar.');
+    return;
+  }
   
-
-console.log('✅ All services initialized');
-  console.log('✅ All services initialized');
+  try {
+    // Iniciar worker
+    await workerService.start();
+    
+    // Sincronizar checks existentes
+    await schedulerService.syncChecks();
+    
+    console.log('✅ All services initialized');
+  } catch (error) {
+    console.error('❌ Error initializing services:', error);
+    throw error;
+  }
 }
 
 // Llamar a la inicialización
 initializeServices().catch((error) => {
   console.error('❌ Failed to initialize services:', error);
-  process.exit(1);
+  // No terminar el proceso, solo el worker falla
+  console.log('⚠️ Continuing without worker services...');
 });
 
 // Manejar cierre graceful
 process.on('SIGTERM', async () => {
   console.log('🛑 SIGTERM received, shutting down gracefully...');
-  await workerService.stop();
+  try {
+    await workerService.stop();
+  } catch (error) {
+    console.error('Error stopping worker:', error);
+  }
   process.exit(0);
 });
 
 process.on('SIGINT', async () => {
   console.log('🛑 SIGINT received, shutting down gracefully...');
-  await workerService.stop();
+  try {
+    await workerService.stop();
+  } catch (error) {
+    console.error('Error stopping worker:', error);
+  }
   process.exit(0);
 });
 
