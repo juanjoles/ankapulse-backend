@@ -3,10 +3,11 @@ import jwt, { SignOptions } from 'jsonwebtoken';
 interface JWTPayload {
   userId: string;
   email: string;
+  nombre:string;
 }
 
 export class JWTUtils {
-  private static readonly JWT_SECRET = process.env.JWT_SECRET || 'hawkpulse_secret_key';
+  private static readonly JWT_SECRET = process.env.JWT_SECRET || 'AnkaPulse_secret_key';
   private static readonly JWT_EXPIRES_IN: string | number = process.env.JWT_EXPIRES_IN || '7d';
 
   static generateToken(payload: JWTPayload): string {
