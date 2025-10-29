@@ -135,6 +135,22 @@ app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// Ruta para limpiar checks zombies (NUEVO)
+app.post('/api/admin/clean-zombie-check/:checkId', async (req, res) => {
+  try {
+    const { checkId } = req.params;
+    console.log(`🧹 Limpiando check zombie: ${checkId}`);
+    
+    // Usar tu schedulerService
+    await schedulerService.removeCheck(checkId);
+    
+    res.json({ success: true, message: `Check ${checkId} removed from queue` });
+  } catch (error) {
+    console.error('Error cleaning zombie check:', error);
+    res.status(500).json({ error });
+  }
+});
+
 // Rutas principales de API (MANTENER)
 app.use('/api', authLimiter, routes);
 
