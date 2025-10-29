@@ -305,7 +305,9 @@ static async upgradeForTesting(req: any, res: Response): Promise<void> {
         message: 'Preferencia de pago creada',
         data: {
           preferenceId: preference.preferenceId,
-          checkoutUrl: preference.sandboxInitPoint || preference.initPoint, // sandbox para TEST
+          checkoutUrl: process.env.NODE_ENV === 'production' 
+            ? preference.initPoint 
+            : preference.sandboxInitPoint,
           planType,
           prices: planPrices,
         },
