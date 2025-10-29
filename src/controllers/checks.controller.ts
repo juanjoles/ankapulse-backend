@@ -74,7 +74,7 @@ export async function updateCheck(req: Request, res: Response): Promise<void> {
     const updateData: any = {};
     if (url !== undefined) updateData.url = url;
     if (name !== undefined) updateData.name = name;
-    if (interval !== undefined) updateData.interval = interval;
+    if (interval !== undefined) updateData.interval = `${interval}min`;
     if (timeout !== undefined) updateData.timeout = timeout;
     if (expectedStatusCode !== undefined) updateData.expectedStatusCode = expectedStatusCode;
     if (regions !== undefined) updateData.regions = regions;  
