@@ -9,6 +9,10 @@ export class WebhookController {
    * POST /api/webhooks/mercadopago
    */
   static async handleMercadoPago(req: Request, res: Response): Promise<void> {
+    console.log('🎯 WEBHOOK INICIADO');
+    console.log('📧 Headers:', req.headers);
+    console.log('📦 Body:', req.body);
+    console.log('📦 Body type:', typeof req.body);
     try {
       const { type, data } = req.body;
 
@@ -139,6 +143,8 @@ export class WebhookController {
       // Responder a MP que recibimos la notificación
       res.status(200).send('OK');
     } catch (error: any) {
+      console.error('❌ ERROR EN WEBHOOK:', error);
+      console.error('❌ Stack trace:', error.stack);
       console.error('❌ Error procesando webhook de MP:', error);
       res.status(500).json({
         error: 'Error processing webhook',
