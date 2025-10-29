@@ -50,10 +50,10 @@ export class MercadoPagoService {
 
     try {
       console.log('🔄 Creando preferencia en MP:', {
-    userId,
-    userEmail,
-    planType,
-    priceARS,
+        userId,
+        userEmail,
+        planType,
+        priceARS,
   });
       const preference = await preferenceClient.create({
         body: {
@@ -71,18 +71,17 @@ export class MercadoPagoService {
             email: userEmail,
           },
           back_urls: {
-            success: 'http://localhost:3000/payment/success',
-            failure: 'http://localhost:3000/payment/failure',
-            pending: 'http://localhost:3000/payment/pending',
+            success: `${process.env.FRONTEND_URL}/payment/success`,
+            failure: `${process.env.FRONTEND_URL}/payment/failure`,
+            pending: `${process.env.FRONTEND_URL}/payment/pending`,
           },
-          //auto_return: 'approved',
-          notification_url: `http://localhost:3000/api/webhooks/mercadopago`,
-          // metadata: {
-          //   user_id: userId,
-          //   plan_type: planType,
-          //   price_usd: priceUSD,
-          //   price_ars: priceARS,
-          // },
+          notification_url: `${process.env.BACKEND_URL}/api/webhooks/mercadopago`,
+          metadata: {
+            user_id: userId,
+            plan_type: planType,
+            price_usd: priceUSD,
+            price_ars: priceARS,
+          },
           // statement_descriptor: 'AnkaPulse',
           external_reference: `${userId}-${planType}-${Date.now()}`,
         },
@@ -96,13 +95,13 @@ export class MercadoPagoService {
         sandboxInitPoint: preference.sandbox_init_point, // URL de checkout TEST
       };
     } catch (error: any) {
-      console.error('❌ Error creando preferencia de MP:', error);
-      console.error('- Mensaje:', error.message);
-  console.error('- Status:', error.status);
-  console.error('- Causa:', error.cause);
-  console.error('- Response:', error.response?.data);
-  console.error('- Error completo:', JSON.stringify(error, null, 2));
-      throw new Error(`Error al crear preferencia de pago: ${error.message}`);
+          console.error('❌ Error creando preferencia de MP:', error);
+          console.error('- Mensaje:', error.message);
+          console.error('- Status:', error.status);
+          console.error('- Causa:', error.cause);
+          console.error('- Response:', error.response?.data);
+          console.error('- Error completo:', JSON.stringify(error, null, 2));
+          throw new Error(`Error al crear preferencia de pago: ${error.message}`);
     }
   }
 

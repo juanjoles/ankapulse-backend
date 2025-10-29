@@ -52,15 +52,32 @@ export class WebhookController {
         status: paymentInfo.status,
         amount: paymentInfo.transactionAmount,
         metadata: paymentInfo.metadata,
+        externalReference: paymentInfo.externalReference,
       });
 
       // Extraer metadata
-      const userId = payment.metadata?.user_id;
-      const planType = payment.metadata?.plan_type;
+      let userId = payment.metadata?.user_id;
+      let planType = payment.metadata?.plan_type;
+
+      // Si no hay metadata, intentar extraer del external_reference
+      if (!userId || !planType) {
+        const externalRef = payment.external_reference;
+        console.log('🔄 Metadata vacía, intentando external_reference:', externalRef);
+        
+        if (externalRef) {
+          // Format: "userId-planType-timestamp"
+          const parts = externalRef.split('-');
+          if (parts.length >= 2) {
+            userId = parts[0];
+            planType = parts[1];
+            console.log('✅ Datos extraídos de external_reference:', { userId, planType });
+          }
+        }
+      }
 
       if (!userId || !planType) {
-        console.error('❌ Metadata incompleta en el pago');
-        res.status(400).json({ error: 'Metadata missing' });
+        console.error('❌ No se pudo obtener userId/planType ni de metadata ni de external_reference');
+        res.status(400).json({ error: 'Cannot identify user or plan type' });
         return;
       }
 
@@ -107,6 +124,15 @@ export class WebhookController {
         // ✨ ACTUALIZACIÓN: Upgrade + reactivar checks automáticamente
         await PlanService.upgradePlan(userId, planType as any);
 
+        // Actualizar profile con fecha de expiración
+        await prisma.profile.update({
+          where: { userId },
+          data: {
+            planExpiresAt: expiresAt,
+            planStartedAt: new Date(),
+          },
+        });
+
         // Crear o actualizar suscripción
         const existingSubscription = await prisma.subscription.findFirst({
           where: {
@@ -132,7 +158,7 @@ export class WebhookController {
               userId,
               planType,
               status: 'active',
-              amount: payment.metadata?.price_usd || 0,
+              amount: payment.metadata?.price_usd || MercadoPagoService.convertARStoUSD(paymentInfo.transactionAmount),
               currency: 'USD',
               billingCycle: 'monthly',
               startDate: new Date(),
@@ -141,7 +167,7 @@ export class WebhookController {
           });
         }
 
-        console.log(`🎉 Usuario ${userId} actualizado a plan ${planType} con checks reactivados automáticamente`);
+        console.log(`🎉 Usuario ${userId} actualizado a plan ${planType} con expiración: ${expiresAt.toLocaleDateString()}`);
       } else {
         console.log(`⚠️ Pago con estado: ${paymentInfo.status} (${paymentInfo.statusDetail})`);
       }
