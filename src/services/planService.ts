@@ -168,7 +168,7 @@ export class PlanService {
   /**
    * Upgrade plan (ACTUALIZADO)
    */
-  static async upgradePlan(userId: string, planType: string): Promise<void> {
+  static async upgradePlan(userId: string, planType: string, durationDays: number = 30): Promise<void> {
     try {
       console.log(`📈 Upgrading usuario ${userId} a ${planType}`);
 
@@ -191,7 +191,7 @@ export class PlanService {
       if (!config) {
         throw new Error(`Plan ${planType} no válido`);
       }
-
+      const expirationDate = new Date(Date.now() + (durationDays * 24 * 60 * 60 * 1000));
       // 1. Actualizar perfil
       await prisma.profile.update({
         where: { userId },
@@ -202,6 +202,7 @@ export class PlanService {
           maxRegions: config.maxRegions,
           dataRetentionDays: config.dataRetentionDays,
           planStartedAt: new Date(),
+          planExpiresAt: expirationDate,
         },
       });
 

@@ -12,6 +12,7 @@ import checksRoutes from './routes/checks.routes';
 import { errorHandler } from './middleware/errorHandler';
 import { WorkerService } from './services/worker.service';
 import { SchedulerService } from './services/scheduler.service';
+import { PlanExpirationService } from './services/planExpirationService';
 
 if (process.env.NODE_ENV !== 'production') {
   dotenv.config();
@@ -160,6 +161,26 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Endpoints temporales para testing
+app.post('/api/admin/test-expiration/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    await PlanExpirationService.testExpiration(userId);
+    res.json({ success: true, message: `Usuario ${userId} expirado manualmente` });
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+app.post('/api/admin/test-cron', async (req, res) => {
+  try {
+    await PlanExpirationService.testCronExecution();
+    res.json({ success: true, message: 'Cron ejecutado manualmente' });
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
 // Manejo de rutas no encontradas
 app.use('*', (req, res) => {
   res.status(404).json({
@@ -237,5 +258,9 @@ app.listen(PORT, () => {
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`🔗 API base URL: http://localhost:${PORT}/api`);
 });
+
+console.log('⏰ Inicializando sistema de expiraciones...');
+PlanExpirationService.initializeCronJobs();
+console.log('✅ Sistema de expiraciones inicializado');
 
 export default app;

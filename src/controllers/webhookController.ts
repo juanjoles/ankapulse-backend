@@ -124,15 +124,6 @@ export class WebhookController {
         // ✨ ACTUALIZACIÓN: Upgrade + reactivar checks automáticamente
         await PlanService.upgradePlan(userId, planType as any);
 
-        // Actualizar profile con fecha de expiración
-        await prisma.profile.update({
-          where: { userId },
-          data: {
-            planExpiresAt: expiresAt,
-            planStartedAt: new Date(),
-          },
-        });
-
         // Crear o actualizar suscripción
         const existingSubscription = await prisma.subscription.findFirst({
           where: {
