@@ -27,6 +27,12 @@ export class WebhookController {
 
       // Obtener ID del pago
       const paymentId = data.id;
+      
+        if (paymentId === '123456' || paymentId === 'test') {
+          console.log('🧪 Webhook de prueba recibido, ignorando...');
+          res.status(200).send('OK');
+          return;
+    }
 
       if (!paymentId) {
         console.error('❌ Webhook sin payment ID');
