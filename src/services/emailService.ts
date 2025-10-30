@@ -18,7 +18,7 @@ export class EmailService {
   private resend: Resend | null = null;
 
   constructor() {
-    this.fromEmail = process.env.EMAIL_FROM || 'AnkaPulse <onboarding@resend.dev>';
+    this.fromEmail = process.env.EMAIL_FROM || 'AnkaPulse <alerts@ankapulse.app>';
     
     // Solo inicializar si existe la API key
     if (process.env.RESEND_API_KEY) {
