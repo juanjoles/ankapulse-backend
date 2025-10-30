@@ -97,7 +97,7 @@ export class EmailService {
           <tr>
             <td style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); padding: 30px; text-align: center;">
               <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600;">
-                🚨 Service Alert
+                🚨 AnkaPulse - Monitor Notification
               </h1>
             </td>
           </tr>
@@ -168,7 +168,7 @@ export class EmailService {
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center" style="padding: 10px 0 30px;">
-                    <a href="${process.env.FRONTEND_URL || 'https://AnkaPulse.com'}/dashboard" 
+                    <a href="${process.env.FRONTEND_URL || 'https://ankapulse.app'}/dashboard" 
                        style="display: inline-block; background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-size: 16px; font-weight: 500;">
                       View Dashboard
                     </a>
