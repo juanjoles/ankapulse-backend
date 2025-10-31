@@ -5,6 +5,7 @@ import auth0Routes from './auth0Routes';
 import checkRoutes from './checks.routes';
 import subscriptionRoutes from './subscriptionRoutes';
 import webhookRoutes from './webhookRoutes';
+import alertRoutes from './alertsRoutes';
 
 const router = Router();
 
@@ -45,6 +46,8 @@ router.use('/checks', checkRoutes);
 router.use('/subscriptions', subscriptionRoutes);
 
 router.use('/webhooks', webhookRoutes);
+
+router.use('/alerts', alertRoutes);
 
 export default router;
 

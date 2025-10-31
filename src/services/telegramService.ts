@@ -10,7 +10,7 @@ export class TelegramService {
       throw new Error('TELEGRAM_BOT_TOKEN no está configurado');
     }
     
-    this.bot = new TelegramBot(token, { polling: true });
+    this.bot = new TelegramBot(token, { polling: false });
     this.initializeBot();
     console.log('📱 TelegramService inicializado');
   }
