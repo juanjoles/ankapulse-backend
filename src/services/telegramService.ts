@@ -11,6 +11,7 @@ export class TelegramService {
     }
     
     this.bot = new TelegramBot(token, { polling: true });
+    this.initializeBot();
     console.log('📱 TelegramService inicializado');
   }
     private initializeBot() {
