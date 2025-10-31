@@ -6,33 +6,10 @@ import checkRoutes from './checks.routes';
 import subscriptionRoutes from './subscriptionRoutes';
 import webhookRoutes from './webhookRoutes';
 import alertRoutes from './alertsRoutes';
+import telegramRoutes from './telegramRoutes';
 
 const router = Router();
 
-// Ruta principal de la API
-router.get('/', (req, res) => {
-  res.json({
-    message: 'Welcome to AnkaPulse API',
-    version: '1.0.0',
-    endpoints: {
-      health: '/health',
-      // Autenticación tradicional
-      register: '/api/users/register',
-      profile: '/api/users/profile',
-      login: '/api/auth/login',
-      logout: '/api/auth/logout',
-      // Auth0 social login
-      auth0Info: '/auth/info',
-      googleLogin: '/auth/login/google',
-      githubLogin: '/auth/login/github',
-      auth0Callback: '/auth/callback',
-      auth0Logout: '/auth/logout/auth0',
-      // Checks endpoints
-      checks: '/api/checks'
-    },
-    note: 'Sistema híbrido: autenticación tradicional + Auth0 social login + API monitoring'
-  });
-});
 
 // Rutas de usuarios
 router.use('/users', userRoutes);
@@ -48,6 +25,8 @@ router.use('/subscriptions', subscriptionRoutes);
 router.use('/webhooks', webhookRoutes);
 
 router.use('/alerts', alertRoutes);
+
+router.use('/telegram', telegramRoutes);
 
 export default router;
 
