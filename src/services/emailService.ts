@@ -41,6 +41,9 @@ export class EmailService {
     }
 
     try {
+      console.log('📧 === EMAIL DEBUG START ===');
+      console.log('📧 Payload completo:', JSON.stringify(data, null, 2));
+
       const htmlContent = this.generateAlertEmailHTML(data);
 
       const response = await this.resend.emails.send({
@@ -50,6 +53,15 @@ export class EmailService {
         html: htmlContent,
       });
 
+        console.log('📧 Resend response completo:', JSON.stringify(response, null, 2));
+        console.log('📧 Tipo de result:', typeof response);
+        console.log('📧 Keys en result:', Object.keys(response || {}));
+        console.log('📧 === EMAIL DEBUG END ===');
+          if (response && response.data?.id) {
+              console.log('✅ Email enviado correctamente, ID:', response.data?.id);
+            } else {
+              console.error('❌ Resend devolvió respuesta inválida:', response);
+            }
       console.log(`✅ Alert email sent successfully to ${data.userEmail}`);
       console.log(`   Message ID: ${response.data?.id}`);
 
