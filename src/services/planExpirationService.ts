@@ -277,6 +277,53 @@ static async testCronExecution(): Promise<void> {
   await this.processExpirations();
 }
 
+// En PlanExpirationService.ts, agregar:
+static initializeDataRetentionJobs(): void {
+  // Ejecutar limpieza diaria a las 2:00 AM (23:00 UTC)
+  cron.schedule('0 23 * * *', async () => {
+    console.log('🗑️ Ejecutando limpieza de datos por retención...');
+    try {
+      await this.cleanupOldCheckResults();
+    } catch (error) {
+      console.error('❌ Error en limpieza de datos:', error);
+    }
+  });
+}
+
+/**
+   * ELIMINAR resultados de checks antiguos según retención de datos
+   */
+static async cleanupOldCheckResults(): Promise<void> {
+  // Obtener usuarios con sus límites de retención
+  const profiles = await prisma.profile.findMany({
+    select: {
+      userId: true,
+      planType: true,
+      dataRetentionDays: true
+    }
+  });
+
+  for (const profile of profiles) {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - profile.dataRetentionDays);
+
+    const deleted = await prisma.checkResult.deleteMany({
+      where: {
+        check: {
+          userId: profile.userId
+        },
+        timestamp: {
+          lt: cutoffDate
+        }
+      }
+    });
+
+    if (deleted.count > 0) {
+      console.log(`🗑️ Eliminados ${deleted.count} registros para usuario ${profile.userId} (plan ${profile.planType})`);
+    }
+  }
+}
+
   /**
    * Obtener información de expiración de un usuario
    */
@@ -307,4 +354,6 @@ static async testCronExecution(): Promise<void> {
       isExpired: profile.planExpiresAt ? profile.planExpiresAt < now : false
     };
   }
+
+  
 }

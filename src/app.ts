@@ -277,6 +277,7 @@ app.listen(PORT, () => {
 
 console.log('⏰ Inicializando sistema de expiraciones...');
 PlanExpirationService.initializeCronJobs();
+PlanExpirationService.initializeDataRetentionJobs();
 console.log('✅ Sistema de expiraciones inicializado');
 
 export default app;
