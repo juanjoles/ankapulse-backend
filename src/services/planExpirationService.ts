@@ -280,7 +280,7 @@ static async testCronExecution(): Promise<void> {
 // En PlanExpirationService.ts, agregar:
 static initializeDataRetentionJobs(): void {
   // Ejecutar limpieza diaria a las 2:00 AM (23:00 UTC)
-  cron.schedule('0 23 * * *', async () => {
+  cron.schedule('0 5 * * *', async () => {
     console.log('🗑️ Ejecutando limpieza de datos por retención...');
     try {
       await this.cleanupOldCheckResults();
@@ -293,6 +293,8 @@ static initializeDataRetentionJobs(): void {
 /**
    * ELIMINAR resultados de checks antiguos según retención de datos
    */
+
+
 static async cleanupOldCheckResults(): Promise<void> {
   // Obtener usuarios con sus límites de retención
   const profiles = await prisma.profile.findMany({
