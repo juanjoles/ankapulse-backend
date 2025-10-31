@@ -1,9 +1,11 @@
 // src/services/alertService.ts
 import { PrismaClient } from '@prisma/client';
 import { EmailService } from './emailService';
+import { TelegramService } from './telegramService';
 
 const prisma = new PrismaClient();
 const emailService = new EmailService();
+const telegramService = new TelegramService();
 
 export class AlertService {
   
@@ -47,6 +49,11 @@ export class AlertService {
         where: { id: checkResultId },
       });
 
+      const userProfile = await prisma.profile.findUnique({
+        where: { userId: check.user.id },
+        select: { telegramChatId: true }
+      });
+
       console.log(`
 ╔════════════════════════════════════════════════════════════╗
 ║                    🚨 ALERT TRIGGERED                      ║
@@ -76,8 +83,21 @@ export class AlertService {
         timestamp: new Date(),
       });
 
+      //Enviar Telegram si está configurado
+      let telegramResult: { success: boolean; reason?: string } | null = null;
+
+      if (userProfile?.telegramChatId) {
+        const telegramMessage = this.buildTelegramMessage(check, checkResult);
+        telegramResult = await telegramService.sendAlert(
+          check.user.id,
+          userProfile.telegramChatId,
+          telegramMessage
+        );
+      }
+      const alerts = [];
+
       // Crear registro de alerta en BD
-      const alert = await prisma.alert.create({
+      const emailAlert = await prisma.alert.create({
         data: {
           checkId,
           checkResultId,
@@ -86,15 +106,36 @@ export class AlertService {
           errorMessage: emailResult.error || null,
         },
       });
+      alerts.push(emailAlert);
 
-      if (emailResult.success) {
-        console.log(`✅ Alert ${alert.id} sent successfully to ${check.user.email}`);
-        console.log(`   Email Message ID: ${emailResult.messageId}`);
-      } else {
-        console.error(`❌ Alert ${alert.id} failed to send: ${emailResult.error}`);
+      // Telegram alert (si se envió)
+      if (telegramResult) {
+        const telegramAlert = await prisma.alert.create({
+          data: {
+            checkId,
+            checkResultId,
+            alertType: 'telegram',
+            success: telegramResult.success,
+            errorMessage: telegramResult.reason || null,
+          },
+        });
+        alerts.push(telegramAlert);
       }
 
-      return alert;
+      if (emailResult.success) {
+        console.log(`✅ Alert ${emailAlert.id} sent successfully to ${check.user.email}`);
+        console.log(`   Email Message ID: ${emailResult.messageId}`);
+      } else {
+        console.error(`❌ Alert ${emailAlert.id} failed to send: ${emailResult.error}`);
+      }
+
+      if (telegramResult?.success) {
+        console.log(`📱 Telegram alert sent to chat ${userProfile?.telegramChatId}`);
+      } else if (telegramResult && !telegramResult.success) {
+        console.log(`⚠️ Telegram alert failed: ${telegramResult.reason}`);
+      }
+
+      return alerts;
 
     } catch (error: any) {
       console.error(`❌ Error handling failure for check ${checkId}:`, error.message);
@@ -117,7 +158,25 @@ export class AlertService {
       throw error;
     }
   }
+private buildTelegramMessage(check: any, checkResult: any): string {
+    const timestamp = new Date().toLocaleString('es-AR', { 
+      timeZone: 'America/Argentina/Buenos_Aires' 
+    });
 
+    return `
+      🚨 <b>AnkaPulse Alert</b>
+
+      <b>Service:</b> ${check.name || 'Unnamed Check'}
+      <b>URL:</b> ${check.url}
+      <b>Status:</b> ${checkResult?.statusCode || 'Unknown'} ❌
+      <b>Region:</b> ${checkResult?.region || 'Unknown'}
+      <b>Time:</b> ${timestamp}
+
+      ${checkResult?.errorMessage ? `<b>Error:</b> ${checkResult.errorMessage}\n` : ''}
+
+      <a href="https://ankapulse.app/checks/${check.id}">View Details →</a>
+          `.trim();
+  }
   /**
    * Obtener historial de alertas de un check
    */

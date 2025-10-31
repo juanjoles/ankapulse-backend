@@ -109,6 +109,9 @@ model Profile {
   dataRetentionDays  Int @default(7) // free: 7, starter: 30, pro: 90
   alertCooldownMin   Int @default(30) // free: 30min, starter: 15min, pro: 0 (inmediato)
 
+  //telegram alert
+  telegramChatId String?
+
   // Uso actual (para tracking)
   currentChecks Int @default(0) // Cuántos checks tiene creados actualmente
 
