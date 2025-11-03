@@ -7,8 +7,23 @@ const alertService = new AlertService();
 export class AlertController {
   
   getAlertSettings = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const userId = req.user?.id;
+    try {   
+    // Verificación de TypeScript
+    if (!req.user) {
+      console.log('❌ No req.user found');
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    // Ahora TypeScript sabe que req.user existe
+    const userId = req.user.id || req.user.userId; 
+    console.log('User ID extracted:', userId);
+    
+    if (!userId) {
+      console.log('❌ No userId in req.user');
+      res.status(401).json({ error: 'User ID not found' });
+      return;
+    }
       const settings = await alertService.getAlertSettings(userId);
       
       if (!settings) {
@@ -25,7 +40,12 @@ export class AlertController {
 
   updateAlertSettings = async (req: Request, res: Response): Promise<void> => {
     try {
-      const userId = req.user?.id;
+      if (!req.user) {
+      console.log('❌ No req.user found');
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+      const userId = req.user.id || req.user.userId;
       const { emailAlertsEnabled, telegramAlertsEnabled, telegramChatId } = req.body;
 
       // Validaciones básicas

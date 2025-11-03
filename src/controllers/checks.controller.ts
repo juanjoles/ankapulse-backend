@@ -145,7 +145,41 @@ export async function getChecks(req: Request, res: Response): Promise<void> {
       orderBy: { createdAt: 'desc' },
     });
 
-    res.json(checks);
+    // ✨ AGREGAR: Calcular métricas básicas para cada check
+    const checksWithMetrics = await Promise.all(
+      checks.map(async (check) => {
+        // Obtener resultados de los últimos 30 días
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        
+        const results = await prisma.checkResult.findMany({
+          where: { 
+            checkId: check.id,
+            timestamp: { gte: thirtyDaysAgo }
+          },
+          select: { success: true, latencyMs: true }
+        });
+
+        const totalChecks = results.length;
+        const successfulChecks = results.filter(r => r.success).length;
+        const uptimePercentage = totalChecks > 0 
+          ? parseFloat(((successfulChecks / totalChecks) * 100).toFixed(1))
+          : 0;
+        
+        const avgLatency = totalChecks > 0
+          ? Math.round(results.reduce((sum, r) => sum + (r.latencyMs || 0), 0) / totalChecks)
+          : 0;
+
+        return {
+          ...check,
+          uptimePercentage,
+          averageLatency: avgLatency,
+          totalChecks,
+          successfulChecks
+        };
+      })
+    );
+
+    res.json(checksWithMetrics);
   } catch (error) {
     console.error('Error fetching checks:', error);
     res.status(500).json({ error: 'Failed to fetch checks' });
