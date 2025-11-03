@@ -1,6 +1,7 @@
 // src/controllers/authController.ts
 import { Request, Response } from 'express';
 import { UserService, CreateUserInput, LoginUserInput } from '../services/userService';
+import { emailService } from '../services/emailService';
 
 export class AuthController {
   /**
@@ -11,18 +12,24 @@ export class AuthController {
     try {
       const userData: CreateUserInput = req.body;
       
-      const result = await UserService.createUser(userData);
-      
+      const {user, token,} = await UserService.createUser(userData);
+      try {
+      await emailService.sendWelcomeEmail(user.email, user.nombre);
+      console.log(`📧 Welcome email sent to ${user.email}`);
+    } catch (emailError) {
+      // No fallar el registro si el email falla
+      console.error('❌ Failed to send welcome email:', emailError);
+    }
       res.status(201).json({
         status: 'success',
         message: 'Usuario registrado exitosamente',
         data: {
-          user: result.user,
-          token: result.token
+          user,
+          token,
         }
       });
       
-      console.log(`✅ Registro exitoso: ${result.user.email}`);
+      console.log(`✅ Registro exitoso: ${user.email}`);
       
     } catch (error) {
       console.error('Error en registro de usuario:', error);

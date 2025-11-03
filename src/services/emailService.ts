@@ -207,27 +207,55 @@ export class EmailService {
     `;
   }
 
-  /**
-   * Email de bienvenida (opcional, para cuando implementes login)
-   */
-  // async sendWelcomeEmail(userEmail: string, userName?: string): Promise<{ success: boolean }> {
-  //   try {
-  //     await this.resend.emails.send({
-  //       from: this.fromEmail,
-  //       to: userEmail,
-  //       subject: '👋 Welcome to AnkaPulse',
-  //       html: `
-  //         <h1>Welcome to AnkaPulse!</h1>
-  //         <p>Hi ${userName || 'there'},</p>
-  //         <p>Thanks for signing up. Start monitoring your APIs and applications from multiple regions.</p>
-  //         <p><a href="${process.env.FRONTEND_URL || 'https://AnkaPulse.com'}/dashboard">Go to Dashboard</a></p>
-  //       `,
-  //     });
+ /**
+ * Email de bienvenida
+ */
+async sendWelcomeEmail(userEmail: string, userName?: string): Promise<{ success: boolean }> {
+  if (!this.resend) {
+    console.warn('Email service not available - RESEND_API_KEY missing');
+    return { success: false };
+  }
 
-  //     return { success: true };
-  //   } catch (error) {
-  //     console.error('Failed to send welcome email:', error);
-  //     return { success: false };
-  //   }
-  // }
+  try {
+    await this.resend.emails.send({
+      from: this.fromEmail,
+      to: userEmail,
+      subject: '🚀 ¡Bienvenido a AnkaPulse!',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #2563eb;">¡Bienvenido a AnkaPulse! 🚀</h1>
+          
+          <p>Hola ${userName || 'Developer'},</p>
+          
+          <p>¡Gracias por unirte a AnkaPulse! Tu cuenta está lista y puedes empezar a monitorear tus APIs ahora mismo.</p>
+          
+          <h3 style="color: #1f2937;">🎯 Primeros pasos:</h3>
+          <ol style="line-height: 1.6;">
+            <li><strong>Crea tu primer check:</strong> <a href="${process.env.FRONTEND_URL || 'https://ankapulse.app'}/checks/new" style="color: #2563eb;">Nuevo Check</a></li>
+            <li><strong>Configura alertas:</strong> <a href="${process.env.FRONTEND_URL || 'https://ankapulse.app'}/alerts" style="color: #2563eb;">Email y Telegram</a></li>
+            <li><strong>Ve tu dashboard:</strong> <a href="${process.env.FRONTEND_URL || 'https://ankapulse.app'}/dashboard" style="color: #2563eb;">Métricas en tiempo real</a></li>
+          </ol>
+          
+          <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 0;"><strong>💡 Tip:</strong> Configura alertas de Telegram para recibir notificaciones instantáneas sin filtros de spam.</p>
+          </div>
+          
+          
+          <p style="margin-top: 30px;">
+            ¡Feliz monitoreo! 📊<br>
+            <strong>El equipo de AnkaPulse</strong>
+          </p>
+        </div>
+      `,
+    });
+
+    console.log(`✅ Welcome email sent to ${userEmail}`);
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to send welcome email:', error);
+    return { success: false };
+  }
 }
+}
+
+export const emailService = new EmailService();

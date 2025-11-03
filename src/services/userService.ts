@@ -160,12 +160,23 @@ static async loginUser(loginData: LoginUserInput): Promise<{ user: UserResponse;
 }
 
 // OPCIONAL: Método para actualizar perfil
-static async updateUser(userId: string, updateData: { nombre?: string; avatar?: string }): Promise<UserResponse> {
+static async updateUser(userId: string, updateData: { nombre?: string; avatar?: string, email?: string; }): Promise<UserResponse> {
+  
+    if (updateData.email) {
+        const existingUser = await prisma.user.findUnique({
+          where: { email: updateData.email }
+        });
+        
+        if (existingUser && existingUser.id !== userId) {
+          throw new Error('Email already in use');
+        }
+      }
   const user = await prisma.user.update({
     where: { id: userId },
     data: {
       ...(updateData.nombre && { nombre: updateData.nombre }),
       ...(updateData.avatar && { avatar: updateData.avatar }),
+      ...(updateData.email && { email: updateData.email }),
       updatedAt: new Date(),
     },
   });

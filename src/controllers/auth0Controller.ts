@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { getAuthorizationUrl } from '../config/auth0';
 import { Auth0Utils } from '../utils/auth0';
 import { UserService } from '../services/userService';
+import { emailService } from '../services/emailService';
 
 export class Auth0Controller {
   // Redirigir a Google via Auth0
@@ -73,6 +74,15 @@ static async handleCallback(req: Request, res: Response): Promise<void> {
     
     // Crear o encontrar usuario en la base de datos
     const result = await UserService.findOrCreateFromAuth0(userProfile);
+
+    if (result.isNewUser) {
+      try {
+        await emailService.sendWelcomeEmail(result.user.email, result.user.nombre);
+        console.log(`📧 Welcome email sent to new Auth0 user: ${result.user.email}`);
+      } catch (emailError) {
+        console.error('❌ Failed to send welcome email to Auth0 user:', emailError);
+      }
+    }
     
     // Establecer cookie segura con el token
     res.cookie('authToken', result.token, {

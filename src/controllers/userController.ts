@@ -85,10 +85,10 @@ static async updateProfile(req: any, res: Response): Promise<void> {
       return;
     }
 
-    const { nombre, avatar } = req.body;
-    
-    const updatedUser = await UserService.updateUser(userId, { nombre, avatar });
-    
+    const { nombre, avatar, email } = req.body;
+
+    const updatedUser = await UserService.updateUser(userId, { nombre, avatar, email });
+
     res.status(200).json({
       status: 'success',
       message: 'Perfil actualizado exitosamente',
