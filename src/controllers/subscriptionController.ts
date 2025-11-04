@@ -162,6 +162,11 @@ static async upgradeForTesting(req: any, res: Response): Promise<void> {
         planType,
       });
 
+      const isProduction = process.env.NODE_ENV === 'production';
+      const checkoutUrl = isProduction 
+        ? preference.initPoint 
+        : preference.sandboxInitPoint;
+
       const prices = MercadoPagoService.getPlanPrices();
       const planPrices = planType === 'starter' ? prices.starter : prices.pro;
 
@@ -170,9 +175,10 @@ static async upgradeForTesting(req: any, res: Response): Promise<void> {
         message: 'Preferencia de pago creada para cambio de plan',
         data: {
           preferenceId: preference.preferenceId,
-          checkoutUrl: preference.sandboxInitPoint || preference.initPoint,
+          checkoutUrl: checkoutUrl,  // ✅ URL corregida
           planType,
           prices: planPrices,
+          environment: process.env.NODE_ENV, // Para debugging
         },
       });
 
@@ -300,16 +306,20 @@ static async upgradeForTesting(req: any, res: Response): Promise<void> {
       const prices = MercadoPagoService.getPlanPrices();
       const planPrices = planType === 'starter' ? prices.starter : prices.pro;
 
+      const isProduction = process.env.NODE_ENV === 'production';
+      const checkoutUrl = isProduction 
+        ? preference.initPoint          // ✅ Producción: usar initPoint
+        : preference.sandboxInitPoint;  // ✅ Desarrollo: usar sandboxInitPoint
+
       res.status(200).json({
         status: 'success',
         message: 'Preferencia de pago creada',
         data: {
           preferenceId: preference.preferenceId,
-          checkoutUrl: process.env.NODE_ENV === 'production' 
-            ? preference.initPoint 
-            : preference.sandboxInitPoint,
+          checkoutUrl: checkoutUrl,  // ✅ URL corregida
           planType,
           prices: planPrices,
+          environment: process.env.NODE_ENV, // Para debugging
         },
       });
     } catch (error: any) {
