@@ -7,6 +7,7 @@ import subscriptionRoutes from './subscriptionRoutes';
 import webhookRoutes from './webhookRoutes';
 import alertRoutes from './alertsRoutes';
 import telegramRoutes from './telegramRoutes';
+import statusPageRoutes from './statusPageRoutes';
 
 const router = Router();
 
@@ -27,6 +28,8 @@ router.use('/webhooks', webhookRoutes);
 router.use('/alerts', alertRoutes);
 
 router.use('/telegram', telegramRoutes);
+
+router.use('/status-page',statusPageRoutes)
 
 export default router;
 

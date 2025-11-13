@@ -11,17 +11,18 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(uuid())
-  auth0Id       String?  @unique
+  id            String      @id @default(uuid())
+  auth0Id       String?     @unique
   provider      String?
   nombre        String
-  email         String   @unique
+  email         String      @unique
   password      String?
   avatar        String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  isActive      Boolean  @default(true)
-  emailVerified Boolean  @default(false)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  isActive      Boolean     @default(true)
+  emailVerified Boolean     @default(false)
+  statusPage    StatusPage? // Un usuario puede tener 1 status page
 
   // Relaciones existentes
   checks Check[]
@@ -35,20 +36,21 @@ model User {
 }
 
 model Check {
-  id                 String    @id @default(uuid())
+  id                 String              @id @default(uuid())
   userId             String
   url                String
   name               String?
-  interval           String    @default("5min")
-  regions            String[]  @default([])
-  timeout            Int       @default(30)
-  expectedStatusCode Int       @default(200)
-  status             String    @default("active")
+  interval           String              @default("5min")
+  regions            String[]            @default([])
+  timeout            Int                 @default(30)
+  expectedStatusCode Int                 @default(200)
+  status             String              @default("active")
   lastCheckAt        DateTime?
   lastStatus         String?
-  failureCount       Int       @default(0)
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  failureCount       Int                 @default(0)
+  statusPageMonitors StatusPageMonitor[] // Checks pueden estar en status pages
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   checkResults CheckResult[]
@@ -201,4 +203,40 @@ model Payment {
   @@index([userId, status])
   @@index([mpPaymentId])
   @@map("payments")
+}
+
+model StatusPage {
+  id          String   @id @default(cuid())
+  userId      String   @unique // Solo 1 status page por usuario
+  slug        String   @unique // URL: status.ankapulse.app/[slug]
+  enabled     Boolean  @default(false)
+  title       String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relación con usuario
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Relación many-to-many con checks
+  monitors StatusPageMonitor[]
+
+  @@index([slug])
+  @@index([userId])
+}
+
+model StatusPageMonitor {
+  id           String   @id @default(cuid())
+  statusPageId String
+  checkId      String
+  displayOrder Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  // Relaciones
+  statusPage StatusPage @relation(fields: [statusPageId], references: [id], onDelete: Cascade)
+  check      Check      @relation(fields: [checkId], references: [id], onDelete: Cascade)
+
+  @@unique([statusPageId, checkId]) // No duplicar mismo check en una página
+  @@index([statusPageId])
+  @@index([checkId])
 }
