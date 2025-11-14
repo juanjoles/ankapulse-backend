@@ -245,11 +245,11 @@ export class StatusPageService {
 
     // 4. Calcular overall status
     const allOperational = monitorsWithMetrics.every(m => m.status === 'operational');
-    const someDown = monitorsWithMetrics.some(m => m.status === 'down');
+    const allDown = monitorsWithMetrics.every(m => m.status === 'down');
 
     const overallStatus = allOperational 
       ? 'operational' 
-      : someDown 
+      : allDown 
       ? 'major_outage' 
       : 'partial_outage';
 
