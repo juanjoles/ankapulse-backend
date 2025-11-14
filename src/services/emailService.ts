@@ -256,6 +256,33 @@ async sendWelcomeEmail(userEmail: string, userName?: string): Promise<{ success:
     return { success: false };
   }
 }
-}
 
+async sendPasswordResetEmail(userEmail: string, resetUrl: string): Promise<{ success: boolean }> {
+  
+  if (!this.resend) {
+    console.warn('❌ [4] RESEND CLIENT IS NULL');
+    return { success: false };
+  }
+
+  try {
+       
+     await this.resend.emails.send({
+      from: 'no-reply@ankapulse.app',
+      to: userEmail,
+      subject: '🔐 Recuperación de contraseña - AnkaPulse',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #2563eb;">Recuperación de contraseña 🔐</h1>
+          <p>Test email - Token: ${resetUrl}</p>
+        </div>
+      `,
+    });
+
+    return { success: true };
+    
+  } catch (error: any) {
+    return { success: false };
+  }
+}
+}
 export const emailService = new EmailService();

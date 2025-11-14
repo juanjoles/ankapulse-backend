@@ -11,18 +11,19 @@ datasource db {
 }
 
 model User {
-  id            String      @id @default(uuid())
-  auth0Id       String?     @unique
-  provider      String?
-  nombre        String
-  email         String      @unique
-  password      String?
-  avatar        String?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  isActive      Boolean     @default(true)
-  emailVerified Boolean     @default(false)
-  statusPage    StatusPage? // Un usuario puede tener 1 status page
+  id             String          @id @default(uuid())
+  auth0Id        String?         @unique
+  provider       String?
+  nombre         String
+  email          String          @unique
+  password       String?
+  avatar         String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  isActive       Boolean         @default(true)
+  emailVerified  Boolean         @default(false)
+  statusPage     StatusPage? // Un usuario puede tener 1 status page
+  passwordResets PasswordReset[]
 
   // Relaciones existentes
   checks Check[]
@@ -239,4 +240,18 @@ model StatusPageMonitor {
   @@unique([statusPageId, checkId]) // No duplicar mismo check en una página
   @@index([statusPageId])
   @@index([checkId])
+}
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
 }
