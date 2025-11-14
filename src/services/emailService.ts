@@ -266,21 +266,84 @@ async sendPasswordResetEmail(userEmail: string, resetUrl: string): Promise<{ suc
 
   try {
        
-     await this.resend.emails.send({
+   const result = await this.resend.emails.send({
       from: 'no-reply@ankapulse.app',
       to: userEmail,
       subject: '🔐 Recuperación de contraseña - AnkaPulse',
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #2563eb;">Recuperación de contraseña 🔐</h1>
-          <p>Test email - Token: ${resetUrl}</p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #2563eb; margin: 0;">Recuperación de contraseña 🔐</h1>
+          </div>
+          
+          <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <p style="margin: 0 0 15px 0; color: #374151; font-size: 16px;">
+              Hola,
+            </p>
+            
+            <p style="margin: 0 0 20px 0; color: #374151; font-size: 16px;">
+              Has solicitado resetear tu contraseña en <strong>AnkaPulse</strong>.
+            </p>
+            
+            <p style="margin: 0 0 25px 0; color: #374151; font-size: 16px;">
+              Haz click en el siguiente botón para crear una nueva contraseña:
+            </p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a 
+                href="${resetUrl}" 
+                style="background: #2563eb; color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold; font-size: 16px;"
+              >
+                Resetear Contraseña
+              </a>
+            </div>
+          </div>
+          
+          <div style="background: #fef3c7; padding: 16px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+            <p style="margin: 0; color: #92400e; font-size: 14px;">
+              <strong>⚠️ Importante:</strong> Este enlace expira en <strong>1 hora</strong> por seguridad.
+            </p>
+          </div>
+          
+          <div style="margin: 25px 0; padding: 15px; background: #f3f4f6; border-radius: 6px;">
+            <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 13px;">
+              <strong>Si el botón no funciona</strong>, copia y pega este enlace en tu navegador:
+            </p>
+            <p style="margin: 0; word-break: break-all;">
+              <a href="${resetUrl}" style="color: #2563eb; font-size: 13px;">${resetUrl}</a>
+            </p>
+          </div>
+          
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+            <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 14px;">
+              Si no solicitaste este cambio, puedes ignorar este email de forma segura.
+            </p>
+            
+            <p style="margin: 20px 0 0 0; color: #6b7280; font-size: 14px;">
+              Saludos,<br>
+              <strong style="color: #374151;">El equipo de AnkaPulse</strong>
+            </p>
+          </div>
+          
+          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+            <p style="margin: 0; color: #9ca3af; font-size: 12px;">
+              AnkaPulse - Monitoreo de APIs simple y accesible
+            </p>
+          </div>
         </div>
       `,
     });
 
+    if (result.error) {
+      console.error('Resend error:', result.error);
+      return { success: false };
+    }
+
+    console.log(`✅ Password reset email sent to ${userEmail}`);
     return { success: true };
     
   } catch (error: any) {
+    console.error('Failed to send password reset email:', error);
     return { success: false };
   }
 }
