@@ -149,12 +149,12 @@ export async function getChecks(req: Request, res: Response): Promise<void> {
     const checksWithMetrics = await Promise.all(
       checks.map(async (check) => {
         // Obtener resultados de los últimos 30 días
-        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
         
         const results = await prisma.checkResult.findMany({
           where: { 
             checkId: check.id,
-            timestamp: { gte: thirtyDaysAgo }
+            timestamp: { gte: sevenDaysAgo  }
           },
           select: { success: true, latencyMs: true }
         });
@@ -162,7 +162,7 @@ export async function getChecks(req: Request, res: Response): Promise<void> {
         const totalChecks = results.length;
         const successfulChecks = results.filter(r => r.success).length;
         const uptimePercentage = totalChecks > 0 
-          ? parseFloat(((successfulChecks / totalChecks) * 100).toFixed(1))
+          ? parseFloat(((successfulChecks / totalChecks) * 100).toFixed(2))
           : 0;
         
         const avgLatency = totalChecks > 0
