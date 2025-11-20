@@ -26,6 +26,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@lemonsqueezy/lemonsqueezy.js": "^4.0.0",
     "@prisma/client": "^5.3.1",
     "bcryptjs": "^2.4.3",
     "bullmq": "^4.14.0",

@@ -24,6 +24,11 @@ router.get('/current', authenticateToken, SubscriptionController.getCurrentSubsc
 // GET /api/subscriptions/payments - Historial de pagos
 router.get('/payments', authenticateToken, SubscriptionController.getPaymentHistory);
 
+// POST /api/subscriptions/lemon/create-checkout - Crear checkout con Lemon Squeezy
+router.post('/lemon/create-checkout', authenticateToken, SubscriptionController.createLemonCheckout);
+
+router.post('/lemon/change-plan', authenticateToken, SubscriptionController.changeLemonPlan);
+
 // POST /api/subscriptions/cancel - Cancelar suscripción
 
 // RUTA DE TESTING - Quitar en producción

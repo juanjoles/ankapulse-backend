@@ -134,50 +134,59 @@ export async function getChecks(req: Request, res: Response): Promise<void> {
   try {
     const userId = req.user?.sub;
 
-    // Validar que el usuario esté autenticado
     if (!userId) {
       res.status(401).json({ error: 'User not authenticated' });
       return;
     }
 
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const start = Date.now(); // ← Para medir tiempo
+    console.log('⏱️ Fetching checks...');
+
+    // ✅ UNA SOLA QUERY con include
     const checks = await prisma.check.findMany({
-      where: { userId },
+      where: { userId,  status: 'active' },
       orderBy: { createdAt: 'desc' },
+      include: {
+        checkResults: {  // ← CAMBIAR: era "results", ahora "checkResults"
+          where: {
+            timestamp: { gte: sevenDaysAgo }
+          },
+          select: {
+            success: true,
+            latencyMs: true
+          }
+        }
+      }
     });
 
-    // ✨ AGREGAR: Calcular métricas básicas para cada check
-    const checksWithMetrics = await Promise.all(
-      checks.map(async (check) => {
-        // Obtener resultados de los últimos 30 días
-        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-        
-        const results = await prisma.checkResult.findMany({
-          where: { 
-            checkId: check.id,
-            timestamp: { gte: sevenDaysAgo  }
-          },
-          select: { success: true, latencyMs: true }
-        });
+    // ✅ Calcular métricas en memoria
+    const checksWithMetrics = checks.map((check) => {
+      const results = check.checkResults; // ← CAMBIAR: ahora es checkResults
+      const totalChecks = results.length;
+      const successfulChecks = results.filter(r => r.success).length;
+      const uptimePercentage = totalChecks > 0 
+        ? parseFloat(((successfulChecks / totalChecks) * 100).toFixed(2))
+        : 0;
+      
+      const avgLatency = totalChecks > 0
+        ? Math.round(results.reduce((sum, r) => sum + (r.latencyMs || 0), 0) / totalChecks)
+        : 0;
 
-        const totalChecks = results.length;
-        const successfulChecks = results.filter(r => r.success).length;
-        const uptimePercentage = totalChecks > 0 
-          ? parseFloat(((successfulChecks / totalChecks) * 100).toFixed(2))
-          : 0;
-        
-        const avgLatency = totalChecks > 0
-          ? Math.round(results.reduce((sum, r) => sum + (r.latencyMs || 0), 0) / totalChecks)
-          : 0;
+      // ✅ No devolver el array de checkResults al frontend
+      const { checkResults: _, ...checkWithoutResults } = check; // ← CAMBIAR
 
-        return {
-          ...check,
-          uptimePercentage,
-          averageLatency: avgLatency,
-          totalChecks,
-          successfulChecks
-        };
-      })
-    );
+      return {
+        ...checkWithoutResults,
+        uptimePercentage,
+        averageLatency: avgLatency,
+        totalChecks,
+        successfulChecks
+      };
+    });
+
+    const duration = Date.now() - start;
+    console.log(`✅ Checks fetched in ${duration}ms`);
 
     res.json(checksWithMetrics);
   } catch (error) {

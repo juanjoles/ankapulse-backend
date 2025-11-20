@@ -106,7 +106,7 @@ model Profile {
   planType String @default("free") // "free", "starter", "pro"
 
   // Límites del plan actual
-  maxChecks          Int @default(10) // free: 10, starter: 20, pro: 50
+  maxChecks          Int @default(10) // free: 10, starter: 50, pro: 200
   minIntervalMinutes Int @default(30) // free: 30min, starter: 5min, pro: 1min
   maxRegions         Int @default(1) // Para futuro: 1, 3, 6
   dataRetentionDays  Int @default(7) // free: 7, starter: 30, pro: 90
@@ -146,6 +146,10 @@ model Subscription {
   mpSubscriptionId String? @unique // ID de suscripción en MP (si usamos suscripciones)
   mpPreapprovalId  String? @unique // ID de preapproval en MP
 
+  // ✅ AGREGAR: Información de Lemon Squeezy
+  lsSubscriptionId String? @unique // ID de suscripción en Lemon Squeezy
+  provider         String? @default("mercadopago") // "mercadopago" o "lemon_squeezy"
+
   // Información de facturación
   amount       Float // Monto en USD (5 o 15)
   currency     String @default("USD")
@@ -165,6 +169,7 @@ model Subscription {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, status])
+  @@index([lsSubscriptionId]) // ✅ AGREGAR índice
   @@map("subscriptions")
 }
 
@@ -187,6 +192,10 @@ model Payment {
   mpStatus       String? // Estado específico de MP
   mpStatusDetail String? // Detalle del estado de MP
 
+  // ✅ AGREGAR: Información de Lemon Squeezy
+  lsOrderId String? @unique // ID del order en Lemon Squeezy
+  provider  String? @default("mercadopago") // "mercadopago" o "lemon_squeezy"
+
   // Metadata adicional (flexible)
   metadata Json? // Para guardar info extra de MP como: payer info, etc
 
@@ -203,6 +212,7 @@ model Payment {
 
   @@index([userId, status])
   @@index([mpPaymentId])
+  @@index([lsOrderId]) // ✅ AGREGAR índice
   @@map("payments")
 }
 

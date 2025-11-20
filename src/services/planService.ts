@@ -1,6 +1,9 @@
 // src/services/planService.ts
 import prisma from '../models/prisma';
 
+import { SchedulerService } from './scheduler.service';
+
+
 // Tipos de planes disponibles
 export type PlanType = 'free' | 'starter' | 'pro';
 
@@ -21,13 +24,13 @@ export const PLANS: Record<PlanType, PlanConfig> = {
   free: {
     name: 'Free',
     price: 0,
-    maxChecks: 5,
+    maxChecks: 10,
     minIntervalMinutes: 30,
     maxRegions: 1,
     dataRetentionDays: 7,
     alertCooldownMin: 30,
     features: [
-      '5 checks',
+      '10 checks',
       '30 min interval',
       'Email alerts',
       '7 days retention',
@@ -36,15 +39,16 @@ export const PLANS: Record<PlanType, PlanConfig> = {
   starter: {
     name: 'Starter',
     price: 5,
-    maxChecks: 15,
-    minIntervalMinutes: 5,
-    maxRegions: 1,
+    maxChecks: 50,
+    minIntervalMinutes: 1,
+    maxRegions: 3,
     dataRetentionDays: 30,
     alertCooldownMin: 15,
     features: [
-      '15 checks',
-      '5 min interval',
+      '50 checks',
+      '1 min interval',
       'Email alerts',
+      'Telegram alerts',
       '30 days retention',
       '15 min alert cooldown',
     ],
@@ -52,7 +56,7 @@ export const PLANS: Record<PlanType, PlanConfig> = {
   pro: {
     name: 'Pro',
     price: 15,
-    maxChecks: 25,
+    maxChecks: 200,
     minIntervalMinutes: 1,
     maxRegions: 1,
     dataRetentionDays: 90,
@@ -61,6 +65,7 @@ export const PLANS: Record<PlanType, PlanConfig> = {
       '25 checks',
       '1 min interval',
       'Email alerts',
+      'Telegram alerts',
       '90 days retention',
       'Immediate notifications',
     ],
@@ -174,13 +179,13 @@ export class PlanService {
 
       const planConfigs: { [key: string]: any } = {
         starter: {
-          maxChecks: 20,
-          minIntervalMinutes: 5,
+          maxChecks: 50,
+          minIntervalMinutes: 1,
           maxRegions: 3,
           dataRetentionDays: 30,
         },
         pro: {
-          maxChecks: 50,
+          maxChecks: 200,
           minIntervalMinutes: 1,
           maxRegions: 10,
           dataRetentionDays: 90,
@@ -255,6 +260,8 @@ export class PlanService {
           maxRegions: 1,
           dataRetentionDays: 7,
           planStartedAt: new Date(),
+          planExpiresAt: null, 
+          telegramAlertsEnabled: false, 
         },
       });
 
@@ -341,15 +348,15 @@ export class PlanService {
       usage: {
         checks: {
           current: activeChecks,
-          limit: profile.maxChecks,
+          limit: config.maxChecks,
           percentage: Math.round(checksUsagePercent),
         },
         dataRetention: {
-          days: profile.dataRetentionDays,
+          days: config.dataRetentionDays,
         },
         minInterval: {
-          minutes: profile.minIntervalMinutes,
-          formatted: this.formatInterval(profile.minIntervalMinutes),
+          minutes: config.minIntervalMinutes,
+          formatted: this.formatInterval(config.minIntervalMinutes),
         },
       },
       expiration: {
@@ -371,7 +378,7 @@ export class PlanService {
       // Definir intervalos mínimos por plan
       const minIntervals: { [key: string]: string } = {
         'free': '30min',
-        'starter': '5min', 
+        'starter': '1min', 
         'pro': '1min'
       };
 
@@ -452,6 +459,16 @@ export class PlanService {
 
         const keepIds = checksToKeep.map(c => c.id);
 
+
+        // Obtener los checks que se van a pausar
+      const checksToPause = await prisma.check.findMany({
+        where: {
+          userId,
+          id: { notIn: keepIds }
+        },
+        select: { id: true }
+      });
+
         // Pausar los checks extras
         const pausedChecks = await prisma.check.updateMany({
           where: {
@@ -463,6 +480,11 @@ export class PlanService {
             updatedAt: new Date()
           }
         });
+
+        const scheduler = new SchedulerService();
+      for (const check of checksToPause) {
+        await scheduler.removeCheck(check.id);
+      }
 
         console.log(`⏸️ ${pausedChecks.count} checks pausados debido al límite del plan`);
       }
