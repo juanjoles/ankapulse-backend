@@ -24,14 +24,14 @@ export const PLANS: Record<PlanType, PlanConfig> = {
   free: {
     name: 'Free',
     price: 0,
-    maxChecks: 10,
-    minIntervalMinutes: 30,
+    maxChecks: 20,
+    minIntervalMinutes: 5,
     maxRegions: 1,
     dataRetentionDays: 7,
     alertCooldownMin: 30,
     features: [
-      '10 checks',
-      '30 min interval',
+      '20 checks',
+      '5 min interval',
       'Email alerts',
       '7 days retention',
     ],
