@@ -58,8 +58,8 @@ export class UserService {
       data: {
         userId: newUser.id,
         planType: 'free',
-        maxChecks: 10,
-        minIntervalMinutes: 30,
+        maxChecks: 20,
+        minIntervalMinutes: 5,
         maxRegions: 1,
         dataRetentionDays: 7,
         alertCooldownMin: 30,
